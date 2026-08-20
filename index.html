@@ -209,23 +209,14 @@
 <div id="intro">
   <div class="logo-wrap">
     <svg viewBox="0 0 200 200" class="logo-glow">
-      <!-- faceted mountain / road-ahead mark, assembled from triangle shards -->
-      <polygon class="shard" style="--fx:-90px; --fy:-40px; --fr:-30deg; animation-delay:0.05s"
-        points="20,150 70,60 90,150" fill="#5b2fb3"/>
-      <polygon class="shard" style="--fx:90px; --fy:-40px; --fr:30deg; animation-delay:0.12s"
-        points="180,150 130,60 110,150" fill="#1e9fb0"/>
-      <polygon class="shard" style="--fx:-60px; --fy:60px; --fr:-20deg; animation-delay:0.2s"
-        points="70,60 100,20 90,150" fill="#7c3aed"/>
-      <polygon class="shard" style="--fx:60px; --fy:60px; --fr:20deg; animation-delay:0.2s"
-        points="130,60 100,20 110,150" fill="#22d3ee"/>
-      <polygon class="shard" style="--fx:0px; --fy:-90px; --fr:0deg; animation-delay:0.32s"
-        points="100,20 90,150 110,150" fill="#a78bfa"/>
-      <polygon class="shard" style="--fx:-110px; --fy:20px; --fr:-45deg; animation-delay:0.4s"
-        points="20,150 90,150 55,175" fill="#3a2166"/>
-      <polygon class="shard" style="--fx:110px; --fy:20px; --fr:45deg; animation-delay:0.4s"
-        points="180,150 110,150 145,175" fill="#164a52"/>
-      <polygon class="shard" style="--fx:0px; --fy:100px; --fr:0deg; animation-delay:0.48s"
-        points="90,150 110,150 100,180" fill="#ffb020"/>
+      <polygon class="shard" style="--fx:-90px; --fy:-40px; --fr:-30deg; animation-delay:0.05s" points="20,150 70,60 90,150" fill="#5b2fb3"/>
+      <polygon class="shard" style="--fx:90px; --fy:-40px; --fr:30deg; animation-delay:0.12s" points="180,150 130,60 110,150" fill="#1e9fb0"/>
+      <polygon class="shard" style="--fx:-60px; --fy:60px; --fr:-20deg; animation-delay:0.2s" points="70,60 100,20 90,150" fill="#7c3aed"/>
+      <polygon class="shard" style="--fx:60px; --fy:60px; --fr:20deg; animation-delay:0.2s" points="130,60 100,20 110,150" fill="#22d3ee"/>
+      <polygon class="shard" style="--fx:0px; --fy:-90px; --fr:0deg; animation-delay:0.32s" points="100,20 90,150 110,150" fill="#a78bfa"/>
+      <polygon class="shard" style="--fx:-110px; --fy:20px; --fr:-45deg; animation-delay:0.4s" points="20,150 90,150 55,175" fill="#3a2166"/>
+      <polygon class="shard" style="--fx:110px; --fy:20px; --fr:45deg; animation-delay:0.4s" points="180,150 110,150 145,175" fill="#164a52"/>
+      <polygon class="shard" style="--fx:0px; --fy:100px; --fr:0deg; animation-delay:0.48s" points="90,150 110,150 100,180" fill="#ffb020"/>
     </svg>
   </div>
   <div class="wordmark-wrap">
@@ -287,6 +278,9 @@
     <button class="btn" id="retry-btn">RETRY</button>
   </div>
 </div>
+
+<!-- ============ AUDIO ELEMENT ============ -->
+<audio id="engine-sound" src="engine.mp3" loop preload="auto"></audio>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -540,10 +534,12 @@
     free.mesh.position.set(free.x, 0, free.z);
   }
 
-  /* ---------- UI ---------- */
+  /* ---------- UI & AUDIO ---------- */
   const hud = document.getElementById('hud');
   const startOverlay = document.getElementById('start-overlay');
   const overOverlay = document.getElementById('over-overlay');
+  const engineSound = document.getElementById('engine-sound'); // Audio reference
+  
   document.getElementById('start-btn').addEventListener('click', startGame);
   document.getElementById('retry-btn').addEventListener('click', startGame);
 
@@ -553,12 +549,18 @@
     overOverlay.classList.remove('show');
     hud.classList.add('show');
     running = true;
+    
+    // Play the engine sound
+    engineSound.play().catch(err => console.log("Audio blocked by browser", err));
   }
 
   function endGame(){
     running = false;
     document.getElementById('final-score').textContent = 'Distance: ' + Math.floor(distance) + 'm';
     overOverlay.classList.add('show');
+    
+    // Pause the engine sound on crash
+    engineSound.pause();
   }
 
   /* ---------- LOOP ---------- */
@@ -582,6 +584,10 @@
       else speed -= 6*dt;
       if(keys['ArrowDown']) speed -= 28*dt;
       speed = Math.max(MIN_SPEED*0.5, Math.min(MAX_SPEED, speed));
+
+      // Update engine pitch and volume dynamically
+      engineSound.playbackRate = 0.6 + (speed / MAX_SPEED);
+      engineSound.volume = 0.3 + (speed / MAX_SPEED) * 0.7;
 
       distance += speed*dt;
       invuln = Math.max(0, invuln - dt);
